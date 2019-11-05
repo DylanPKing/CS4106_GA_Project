@@ -1,26 +1,80 @@
 import java.util.Arrays;
 
-import org.graalvm.compiler.phases.common.ConditionalEliminationPhase;
 import javax.swing.JOptionPane;
 
 public class GraphOrdering {
-    public static void Main(String [] args){
-        //Szymon needs these for input
+    public static void main(String [] args)
+	{
+		 //Szymon needs these for input
         int populationSize = 0;
-        int numberOfGenerations = 0;
-        int crossoverRate = 0;
-        int mutationRate = 0;
+        int numberOfGenerations = -1;
+        int crossoverRate = -1;
+        int mutationRate = -1;
 
-        //get the population size
-        populationSize = validator(crossoverRate, mutationRate, "Please enter a positive integer.", "Your hand must have slipped. Enter a positive integer.");
-        numberOfGenerations = validator(crossoverRate, mutationRate, "Please enter a positive integer.", "Well, it would appear you did something wrong, YOU, not us.");
+		//Get the welcome message
+		welcome();
+        
+        /*-------------------------------Szymon is is doing validation and input-------------------------------*/
+        //get the population size using loops to back step
+		while(true){
+            populationSize = validator(crossoverRate, 0, "Please enter a population size.", "Your hand must have slipped. Enter a positive integer.");
+            //If you cancel at first window, you want to quit.
+			if(populationSize == -1)
+                System.exit(0);
+            //Get number of generations
+			while(numberOfGenerations == -1){
+                numberOfGenerations = validator(crossoverRate, 0, "Please enter the number of generations.", "Well, it would appear you did something wrong, YOU, not us.");
+                //If you cancel here, go back one window
+                if(numberOfGenerations == -1)
+			        break;
+                //Get crossover rate
+                while(crossoverRate == -1){
+                    crossoverRate = validator(crossoverRate, 1, "Enter the crossover rate (0-100)", "Were the instructions unclear? A number in range....");
+                    //If you cancel here, go back one window
+                    if(crossoverRate == -1){
+                        numberOfGenerations = -1;
+                        break;
+                    }
+                    //Get mutation rate
+                    while(mutationRate == -1){
+                        mutationRate = validator(crossoverRate, 1, "Enter the mutation rate (0-100)", "*sigh* Can you please actually try to follow the instructions?");
+                        //If you cancel here, go back one window
+                        if(mutationRate == -1){
+                            crossoverRate = -1;
+                            break;
+                        }
+                    }
+                }
+            }
+            //If everything is correct, exit the loop and be happy about being done with validation
+            if(numberOfGenerations != -1 && crossoverRate != -1 && mutationRate != -1)
+                break;
+        }
+        /*-------------------------------End Szymon is is doing validation and input-------------------------------*/
+        //The main continues here
     }
-    /*-------------------------------Szymon is is doing validation and input-------------------------------*/
+	
+	/*-------------------------------Szymon is is doing validation and input-------------------------------*/
+	
+	/**
+	 * Just a quick welcome message
+	 * @author Szymon Sztyrmer
+	 */
+	public static void welcome()
+	{
+		JOptionPane.showMessageDialog(null, "Welcome, press OK to start, use the cancel button to return to the previous screen during input.");
+	}
+	
     /**
-     * The function that validates the user input
+     * The function that validates all the user input
      * @author Szymon Sztyrmer
+     * @param crossoverRate Keeping track of the crossover rate for 1 check at the end
+     * @param check An int telling the method whether its dealing with the 2 range bound variables
+     * @param enterMessage A string containing the message to be displayed on the input window
+     * @param errorMessage A string containing the custom error should the user not supply the correct information
+     * @return userInput is parsed into an integer and returned back to the main to be stored in the corresponding variable
      */
-    public static int validator(int crossoverRate, int mutationRate, String enterMessage, String errorMessage){
+    public static int validator(int crossoverRate, int check, String enterMessage, String errorMessage){
         //Get the variables I need
         String pattern = "[0-9]{1,}";
         String userInput = "";
@@ -29,14 +83,35 @@ public class GraphOrdering {
         while(true){
             //User input
             userInput = (String) JOptionPane.showInputDialog(null, enterMessage);
+			//If you press cancel
+			if(userInput == null){
+				JOptionPane.showMessageDialog(null, "Process Aborted", "Ha, I got you!", 0);
+				return -1;
+			}
             //Check if integer
-            if(!(userInput.matches(pattern)))
+            if(!(userInput.matches(pattern))){
                 //If not, repeat
                 JOptionPane.showMessageDialog(null, errorMessage, "Oops, Something went wrong.", 0);
-            else
-                //If integer, move on
-                break;
-                
+                continue;
+            }
+            //If integer, move on
+            else{
+                //If it's crossover or mutation
+                //If it's greater than 100 because it can't be less than 0 from up above, trust me I tried.
+                if(check == 1 && Integer.parseInt(userInput) > 100){
+                    //Back to the top to get a number that's not greater than 100
+                    JOptionPane.showMessageDialog(null, "Really? The instructions said (0-100) right? How about you try to follow that", "Numbers are hard", 0);
+                    continue;
+                }
+                //If the sum of crossover and mutation is greater than 100
+                else if(check == 1 && (crossoverRate + Integer.parseInt(userInput)) > 100){
+                    //Back to the previous window to select new crossover and mutation
+                    JOptionPane.showMessageDialog(null, "The sum of the crossover rate and the mutation rate cannot be bigger than 100...", "You like big numbers a little too much", 0);
+                    return -1;
+                }
+            }   
+            //If you got here, you have a nice validated number as a string to be converted to int.
+            break;
         }
         //Return the number
         return Integer.parseInt(userInput);
@@ -158,3 +233,4 @@ public class GraphOrdering {
         }
     }
 }
+
