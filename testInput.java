@@ -44,6 +44,7 @@ public class testInput{
         System.out.println("Max Column: "+maxCol);
         /*
         Create the adjacency Matrix
+        Convert edge list to adjacency Matrix
         */
         int[][] matrix = new int[maxRow + 1][maxCol + 1];
 
