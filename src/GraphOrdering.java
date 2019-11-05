@@ -1,6 +1,48 @@
 import java.util.Arrays;
 
+import org.graalvm.compiler.phases.common.ConditionalEliminationPhase;
+import javax.swing.JOptionPane;
+
 public class GraphOrdering {
+    public static void Main(String [] args){
+        //Szymon needs these for input
+        int populationSize = 0;
+        int numberOfGenerations = 0;
+        int crossoverRate = 0;
+        int mutationRate = 0;
+
+        //get the population size
+        populationSize = validator(crossoverRate, mutationRate, "Please enter a positive integer.", "Your hand must have slipped. Enter a positive integer.");
+        numberOfGenerations = validator(crossoverRate, mutationRate, "Please enter a positive integer.", "Well, it would appear you did something wrong, YOU, not us.");
+    }
+    /*-------------------------------Szymon is is doing validation and input-------------------------------*/
+    /**
+     * The function that validates the user input
+     * @author Szymon Sztyrmer
+     */
+    public static int validator(int crossoverRate, int mutationRate, String enterMessage, String errorMessage){
+        //Get the variables I need
+        String pattern = "[0-9]{1,}";
+        String userInput = "";
+
+        //Get the user to enter a number
+        while(true){
+            //User input
+            userInput = (String) JOptionPane.showInputDialog(null, enterMessage);
+            //Check if integer
+            if(!(userInput.matches(pattern)))
+                //If not, repeat
+                JOptionPane.showMessageDialog(null, errorMessage, "Oops, Something went wrong.", 0);
+            else
+                //If integer, move on
+                break;
+                
+        }
+        //Return the number
+        return Integer.parseInt(userInput);
+    }
+
+    /*-------------------------------End Szymon is doing validation and input-------------------------------*/
 
     /**
      * Entry function for selection process.
