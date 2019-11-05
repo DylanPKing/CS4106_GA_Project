@@ -45,9 +45,25 @@ public class testInput{
         /*
         Create the adjacency Matrix
         */
-        int[][] matrix = new int[maxCol][maxRow];
+        int[][] matrix = new int[maxRow + 1][maxCol + 1];
 
+        for (int i = 0; i < edgeTable.get(0).size(); i++) {
+            matrix[edgeTable.get(0).get(i)][edgeTable.get(1).get(i)] = 1;
+        }
 
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j] == 1)
+                    matrix[j][i] = 1;
+            }
+        }
 
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+        
     }
 }
