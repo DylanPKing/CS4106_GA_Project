@@ -3,6 +3,9 @@ import java.util.Arrays;
 import javax.swing.JOptionPane;
 
 public class GraphOrdering {
+
+    //I nned chunk for fitness function
+    public static double chunk = 0;
     public static void main(String [] args)
 	{
 		 //Szymon needs these for input
@@ -232,5 +235,41 @@ public class GraphOrdering {
             fitness[k] = rightFitArr[j];
         }
     }
+
+    /*------------------------------------Szymon is doing the fitness function----------------------------------------------*/
+    
+    /**
+     * The function that evaluates the fitness of the any given ordering
+     * @author Szymon Sztyrmer
+     * @param adjacencyMat The whole adjacency matrix
+     * @param currentOrdering The current order at any given point
+     * @param maxColumn The bound for columns
+     * @param maxRow The bound for rows
+     * @return distance The distance of the line "drawn" between all the points (Lower is better)
+     */
+    public static double fitnessFunction(int [][] adjacencyMat, int[] currentOrdering, int maxColumn, int maxRow){
+        int radius = 100;
+        int mov = 200;
+        double x1 = 0.0;
+        double x2 = 0.0; 
+        double y1 = 0.0; 
+        double y2 = 0.0;
+        double distance = 0.0;
+
+        for(int i = 0; i < maxRow; i++)
+            for(int j = i; j < maxColumn; j++){
+                if(adjacencyMat[currentOrdering[i]][currentOrdering[j]] == 1){
+                    x1 = (((double) Math.cos(i * chunk)) * radius + mov);
+                    y1 = (((double) Math.sin(i * chunk)) * radius + mov);
+                    x2 = (((double) Math.cos(j * chunk)) * radius + mov);
+                    y2 = (((double) Math.cos(j * chunk)) * radius + mov);
+                }
+                
+                distance += Math.sqrt(Math.pow((x2 - x1), 2) + (Math.pow(y2 - y1, 2)));
+            }
+        return distance;
+    }
+    
+    /*------------------------------------End Szymon is doing the fitness function----------------------------------------------*/
 }
 
