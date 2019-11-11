@@ -56,9 +56,9 @@ public class GraphOrdering {
         /*-------------------------------End Szymon is is doing validation and input-------------------------------*/
         //The main continues here
         int[][] adjMatrix = convertEdgeTable();
-        int[][] currentPopulation;
-        int[][] nextPopulation;
-        initialisation(currentPopulation, nextPopulation, populationSize, adjMatrix.length);
+        int[][] currentPopulation = new int[adjMatrix.length][populationSize];
+        int[][] nextPopulation = new int[adjMatrix.length][populationSize];
+        initialisation(currentPopulation, adjMatrix.length);
     }
 	
 	/*-------------------------------Szymon is is doing validation and input-------------------------------*/
@@ -192,11 +192,9 @@ public class GraphOrdering {
         return matrix;
     } 
 
-    public static void initialisation(int[][] current, int[][] next, int population, int maxRow)
+    public static void initialisation(int[][] current, int maxRow)
     {
-        int random = 0; 
-        current =  new int[maxRow + 1][population];
-        next =  new int[maxRow + 1][population];
+        int random = 0;
         boolean found = false;
         int populationCount = 0;
 
@@ -230,7 +228,7 @@ public class GraphOrdering {
             System.out.println();
         }
     }
-    }
+    
 
     /*-------------------------------End Szymon is doing validation and input-------------------------------*/
 
