@@ -1,12 +1,12 @@
-import java.util.Arrays;
-
+import java.util.*;
+import java.io.*;
 import javax.swing.JOptionPane;
 
 public class GraphOrdering {
 
     //I nned chunk for fitness function
     public static double chunk = 0;
-    public static void main(String [] args)
+    public static void main(String [] args) throws IOException
 	{
 		 //Szymon needs these for input
         int populationSize = 0;
@@ -55,6 +55,10 @@ public class GraphOrdering {
         }
         /*-------------------------------End Szymon is is doing validation and input-------------------------------*/
         //The main continues here
+        int[][] adjMatrix = convertEdgeTable();
+        int[][] currentPopulation;
+        int[][] nextPopulation;
+        initialisation(currentPopulation, nextPopulation, populationSize, adjMatrix.length);
     }
 	
 	/*-------------------------------Szymon is is doing validation and input-------------------------------*/
@@ -120,6 +124,114 @@ public class GraphOrdering {
         return Integer.parseInt(userInput);
     }
 
+    public static int[][] convertEdgeTable() throws IOException {
+        File inputFile = new File("input.txt");
+        Scanner in = new Scanner(inputFile);
+        int maxCol = 0;
+        int maxRow = 0;
+        int temp = 0;
+        ArrayList<ArrayList<Integer>> edgeTable = new ArrayList<ArrayList<Integer>>();
+        edgeTable.add(new ArrayList<Integer>());
+        edgeTable.add(new ArrayList<Integer>());
+        String[] split;
+        System.out.println(inputFile.exists());
+        /*
+        Split file contents into temp variable, then fill matrix.
+        */
+        while(in.hasNext()){
+            split = in.nextLine().split(" ");
+            for(int i = 0; i<split.length;i++){
+                temp = Integer.parseInt(split[i]);
+                if(i%2==0)
+                    edgeTable.get(0).add(temp);
+                else
+                    edgeTable.get(1).add(temp);
+            }
+        }
+        for(int i=0;i<edgeTable.size();i++){
+            for(int j=0;j<edgeTable.get(i).size();j++)
+                System.out.print(edgeTable.get(i).get(j) + " ");
+            System.out.println();
+        }
+        /*
+        Assign Max Row value
+        */
+        for(int j =0; j<edgeTable.get(0).size() - 1;j++)
+            maxRow = Math.max(maxRow, Math.max(edgeTable.get(0).get(j), edgeTable.get(0).get(j+1)));
+        System.out.println("Max Row: " + maxRow);
+        /*     
+        Assign Max Coloumn value
+        */
+        for(int j =0; j<edgeTable.get(1).size() - 1;j++)
+            maxCol = Math.max(maxCol, Math.max(edgeTable.get(1).get(j), edgeTable.get(1).get(j+1)));
+        System.out.println("Max Column: "+maxCol);
+        /*
+        Create the adjacency Matrix
+        Convert edge list to adjacency Matrix
+        */
+        int[][] matrix = new int[maxRow + 1][maxCol + 1];
+
+        for (int i = 0; i < edgeTable.get(0).size(); i++) {
+            matrix[edgeTable.get(0).get(i)][edgeTable.get(1).get(i)] = 1;
+        }
+
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j] == 1)
+                    matrix[j][i] = 1;
+            }
+        }
+
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+        in.close();
+        return matrix;
+    } 
+
+    public static void initialisation(int[][] current, int[][] next, int population, int maxRow)
+    {
+        int random = 0; 
+        current =  new int[maxRow + 1][population];
+        next =  new int[maxRow + 1][population];
+        boolean found = false;
+        int populationCount = 0;
+
+        //Let's make unique random values
+        ArrayList<Integer> uniqueRandomNumbers = new ArrayList<Integer>();
+        for(int row = 0; row < (maxRow+1); row++){
+            for(int i = 0; i< (maxRow+1);){
+                found = false;
+                random = (int)(Math.random() * 18);
+                for(int j = 0; j< uniqueRandomNumbers.size(); j++){
+                    if(uniqueRandomNumbers.get(j) == random)
+                        found = true;
+                }
+                if(!found){
+                    uniqueRandomNumbers.add(random);
+                    i++;
+                }
+            }
+            for(int j = 0; j < uniqueRandomNumbers.size();j++){
+                current[populationCount][j] =uniqueRandomNumbers.get(j);
+            }
+            uniqueRandomNumbers.clear();
+            populationCount++;
+        }
+
+        System.out.println("Here begins the population initialisation");
+        for (int i = 0; i < current.length; i++) {
+            for (int j = 0; j < current[i].length; j++) {
+                System.out.print(current[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+    }
+
     /*-------------------------------End Szymon is doing validation and input-------------------------------*/
 
     /**
@@ -127,7 +239,7 @@ public class GraphOrdering {
      * @param currentPop all the combinations stored
      * @param fitness corresponding fitness values for each member of the population
      */
-    public void selectionProcess(int[][] currentPop, double[] fitness) {
+    public static void selectionProcess(int[][] currentPop, double[] fitness) {
         selectionProcessSort(currentPop, fitness, 0, fitness.length);
         increaseFitness(currentPop, fitness);
     }
@@ -137,7 +249,7 @@ public class GraphOrdering {
      * @param currentPop all the combinations stored
      * @param fitness corresponding fitness values for each member of the population
      */
-    private void increaseFitness(int[][] currentPop, double[] fitness) {
+    private static void increaseFitness(int[][] currentPop, double[] fitness) {
         int segSize = fitness.length / 3;
 
         // Starting point for loops, and offset for fetching the index to replace with
@@ -172,7 +284,7 @@ public class GraphOrdering {
      * @param left lower bound to use for array
      * @param right upper bound to use for array
      */
-    private void selectionProcessSort(int[][] currentPop, double[] fitness, final int left, final int right) {
+    private static void selectionProcessSort(int[][] currentPop, double[] fitness, final int left, final int right) {
 
         // Only execute if the bounds do not overlap
         if (left < right) {
@@ -197,7 +309,7 @@ public class GraphOrdering {
      * @param middle midpoint to use for array split
      * @param right upper bound to use for array split
      */
-    private void selectionProcessMerge(int[][] currentPop, double[] fitness,
+    private static void selectionProcessMerge(int[][] currentPop, double[] fitness,
                                        final int left, final int middle, final int right) {
 
         // Creating copies of each half of both arrays
@@ -272,4 +384,3 @@ public class GraphOrdering {
     
     /*------------------------------------End Szymon is doing the fitness function----------------------------------------------*/
 }
-

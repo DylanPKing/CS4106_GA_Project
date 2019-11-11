@@ -65,6 +65,59 @@ public class testInput{
             }
             System.out.println();
         }
-        
+        in.close();
+    
+        //In the 2d Array, P times, randomly generate a unique number, for each row in the array
+    //Initialisation
+    int population = 0;
+    int random = 0; 
+    int[][] current =  new int[maxRow + 1][population];
+    int[][] next =  new int[maxRow + 1][population];
+    boolean found = false;
+    int populationCount = 0;
+
+    //Let's make unique random values
+    ArrayList<Integer> uniqueRandomNumbers = new ArrayList<Integer>();
+    for(int row = 0; row < (maxRow+1); row++){
+        for(int i = 0; i< (maxRow+1);){
+            found = false;
+            random = (int)(Math.random() * 18);
+            for(int j = 0; j< uniqueRandomNumbers.size(); j++){
+                if(uniqueRandomNumbers.get(j) == random)
+                    found = true;
+            }
+            if(!found){
+                uniqueRandomNumbers.add(random);
+                i++;
+            }
+        }
+        for(int j = 0; j < uniqueRandomNumbers.size();j++){
+            current[populationCount][j] =uniqueRandomNumbers.get(j);
+        }
+        uniqueRandomNumbers.clear();
+        populationCount++;
     }
+        
+
+        //Add Unique Random numbers to Current
+        /*
+    for (int i = 0; i < current.length; i++) {
+        for (int j = 0; j < current[i].length; j++) {
+            random = (int)(Math.random() * 18);
+            current[i][j] = random;
+        }
+    }*/
+
+    System.out.println("Here begins the population initialisation");
+    //population = 10;
+//while(population > 0)
+    for (int i = 0; i < current.length; i++) {
+        for (int j = 0; j < current[i].length; j++) {
+            System.out.print(current[i][j] + " ");
+        }
+        System.out.println();
+    }
+    //population--;
+    
+}
 }
