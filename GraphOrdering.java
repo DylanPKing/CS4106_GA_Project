@@ -1,15 +1,55 @@
 import java.util.*;
 import java.io.*;
+
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import java.awt.Graphics;
 
-public class GraphOrdering {
+public class GraphOrdering extends JFrame{
 
-    //I nned chunk for fitness function
+    //I need chunk for fitness function
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    
+
+    static int[][] adjMatrix;
+    static int[] currentOrdering;
+    static int populationSize;
+
     public static double chunk = 0;
+
+    public GraphOrdering() {
+        setTitle("AI");
+        setSize(960, 960);
+        setVisible(true);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    public void paint(Graphics g) {
+        int radius = 100;
+        int mov = 200;
+        
+        for (int i = 0; i < populationSize; i++) {
+            for (int j = i + 1; j < populationSize; j++) {
+                if (adjMatrix[currentOrdering[i]][currentOrdering[j]] == 1) {
+                    g.drawLine(
+                        (int)(((double) Math.cos(i * chunk)) * radius + mov),
+                        (int)(((double) Math.sin(i * chunk)) * radius + mov),
+                        (int)(((double) Math.cos(j * chunk)) * radius + mov),
+                        (int)(((double) Math.cos(j * chunk)) * radius + mov)
+                    );
+                }
+            }
+        }
+    }
+
     public static void main(String [] args) throws IOException
 	{
 		 //Szymon needs these for input
-        int populationSize = 0;
         int numberOfGenerations = -1;
         int crossoverRate = -1;
         int mutationRate = -1;
@@ -55,10 +95,32 @@ public class GraphOrdering {
         }
         /*-------------------------------End Szymon is is doing validation and input-------------------------------*/
         //The main continues here
-        int[][] adjMatrix = convertEdgeTable();
+        chunk = (2 * Math.PI) / populationSize;
+        adjMatrix = convertEdgeTable();
         int[][] currentPopulation = new int[adjMatrix.length][populationSize];
         int[][] nextPopulation = new int[adjMatrix.length][populationSize];
+        double[] fitness = new double[adjMatrix.length];
         initialisation(currentPopulation, adjMatrix.length);
+        for (int i = 0; i < currentPopulation.length; i++) {
+            currentOrdering = currentPopulation[i];
+            fitness[i] = fitnessFunction();
+        }
+        
+        for (int i = 0; i < numberOfGenerations; i++) {
+            selectionProcess(currentPopulation, fitness);
+            //Crossover here
+            
+            for (int j = 0; j < nextPopulation.length; j++) {
+                currentOrdering = currentPopulation[j];
+                fitness[j] = fitnessFunction();
+            }
+
+            for (int j = 0; j < nextPopulation.length; j++) {
+                currentPopulation[j] = Arrays.copyOf(nextPopulation[j], nextPopulation[j].length);
+            }
+            currentOrdering = currentPopulation[0];
+            GraphOrdering visualisation = new GraphOrdering();
+        }
     }
 	
 	/*-------------------------------Szymon is is doing validation and input-------------------------------*/
@@ -351,13 +413,9 @@ public class GraphOrdering {
     /**
      * The function that evaluates the fitness of the any given ordering
      * @author Szymon Sztyrmer
-     * @param adjacencyMat The whole adjacency matrix
-     * @param currentOrdering The current order at any given point
-     * @param maxColumn The bound for columns
-     * @param maxRow The bound for rows
      * @return distance The distance of the line "drawn" between all the points (Lower is better)
      */
-    public static double fitnessFunction(int [][] adjacencyMat, int[] currentOrdering, int maxColumn, int maxRow){
+    public static double fitnessFunction() {
         int radius = 100;
         int mov = 200;
         double x1 = 0.0;
@@ -365,10 +423,11 @@ public class GraphOrdering {
         double y1 = 0.0; 
         double y2 = 0.0;
         double distance = 0.0;
+    
 
-        for(int i = 0; i < maxRow; i++)
-            for(int j = i; j < maxColumn; j++){
-                if(adjacencyMat[currentOrdering[i]][currentOrdering[j]] == 1){
+        for(int i = 0; i < adjMatrix.length; i++)
+            for(int j = i; j < adjMatrix[i].length; j++){
+                if(adjMatrix[currentOrdering[i]][currentOrdering[j]] == 1){
                     x1 = (((double) Math.cos(i * chunk)) * radius + mov);
                     y1 = (((double) Math.sin(i * chunk)) * radius + mov);
                     x2 = (((double) Math.cos(j * chunk)) * radius + mov);
