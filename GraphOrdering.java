@@ -108,16 +108,17 @@ public class GraphOrdering extends JFrame{
         
         for (int i = 0; i < numberOfGenerations; i++) {
             selectionProcess(currentPopulation, fitness);
-            //Crossover here
+            crossoverFunction(crossoverRate, mutationRate, currentPopulation, nextPopulation);
             
+            for (int j = 0; j < nextPopulation.length; j++) {
+                currentPopulation[j] = Arrays.copyOf(nextPopulation[j], nextPopulation[j].length);
+            }
+
             for (int j = 0; j < nextPopulation.length; j++) {
                 currentOrdering = currentPopulation[j];
                 fitness[j] = fitnessFunction();
             }
 
-            for (int j = 0; j < nextPopulation.length; j++) {
-                currentPopulation[j] = Arrays.copyOf(nextPopulation[j], nextPopulation[j].length);
-            }
             currentOrdering = currentPopulation[0];
             GraphOrdering visualisation = new GraphOrdering();
         }
@@ -407,7 +408,229 @@ public class GraphOrdering extends JFrame{
             fitness[k] = rightFitArr[j];
         }
     }
+    /** 
+     * Decides which method to use to generate new generation
+     * @author Louise Madden
+     */
+    public static void crossoverFunction(int crossoverRate, int mutationRate, int[][] currentPopulation, int[][] nextPopulation) {
+       //boolean array listing if an ordering has been used yet
+        boolean[] available = new boolean[currentPopulation.length];
+        for (int i = 0; i < available.length; i++) {
+            available[i] = true;
+        }
+        while (!isEmpty(available)) {
+            int pr = (int) Math.random() * 101;
+            if (crossoverRate >= pr) {
+                crossover(currentPopulation,nextPopulation, available);
+            }
 
+            if (crossoverRate <= pr && pr <= (crossoverRate + mutationRate)) {
+                mutation(currentPopulation,nextPopulation, available);
+            }
+
+            if ((crossoverRate + mutationRate) <= pr) {
+                reproduction(currentPopulation,nextPopulation, available);
+            }
+        }
+    }
+    /**
+     * Crossover function, swaps up to a certain point in two orderings, then removes duplicates
+     * @author Louise Madden
+     * @param currentPopulation
+     * @param nextPopulation
+     * @param available
+     */
+    public static void crossover(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
+        boolean parent1 = false, parent2 = false;
+        int[] parentOne = new int[currentPopulation.length];
+        int[] parentTwo = new int[currentPopulation.length];
+        //Assigning the parent orderings from ones that havn't been used yet
+        while(parent1 && parent2) {
+            int parent = (int)(Math.random()*currentPopulation.length);
+            if(available[parent] && !parent1) {
+                parentOne = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
+                parent1 = true;
+                available[parent] = false;
+                //Assigned parent one and made that ordering unavailableto be chosen again
+            }
+            parent = (int)(Math.random()*currentPopulation.length);
+            //finding parent ordering two
+            if(available[parent]) {
+                parentTwo = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
+                parent2 = true;
+                available[parent] = false;
+            }
+        }
+        //manipulating children
+        int[] childOne = new int[nextPopulation[0].length];
+        childOne = Arrays.copyOf(parentOne, parentOne.length);
+        int[] childTwo = new int[nextPopulation[0].length];
+        childTwo = Arrays.copyOf(parentTwo, parentTwo.length);
+
+        int cuttingPoint = (int)((Math.random() * (currentPopulation.length - 1)) + 1);
+        for (int i = 0; i < cuttingPoint; i++) {
+            childOne[i] = parentTwo[i];
+            childTwo[i] = parentOne[i];
+        }
+        //removing duplicates in children and adding them to the next generation
+        childOne = removeDuplicates(parentOne, childOne);
+        childTwo = removeDuplicates(parentTwo, childTwo);
+        nextPopulation = addToNextPop(childOne, nextPopulation);
+        nextPopulation = addToNextPop(childTwo, nextPopulation);
+    }
+
+    /**
+     * Mutates an ordering, chooses random numbers to swap and swaps them
+     * @author Louise Madden
+     * @param currentPopulation
+     * @param nextPopulation
+     * @param available
+     */
+    public static void mutation(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
+        
+        //find ordering to mutate
+        boolean availableParent = false;
+        int[] mutationParent = new int[currentPopulation.length];
+        int parent = 0;
+        while(!availableParent) {
+            parent = (int)(Math.random() * mutationParent.length);
+            if(available[parent]) {
+                mutationParent = Arrays.copyOf(currentPopulation[parent], mutationParent.length);
+                available[parent] = false;
+            }
+        }
+        //get two unique random numbers to mutate
+        int mutationOne = 0, mutationTwo = 0;
+        while (mutationOne == mutationTwo) {
+            mutationOne = (int)(Math.random() * mutationParent.length - 1);
+            mutationTwo = (int)(Math.random() * mutationParent.length - 1);
+        }
+        //swap numbers and add to next population
+        int temp = mutationParent[mutationOne];
+        mutationParent[mutationOne] = mutationParent[mutationTwo];
+        mutationParent[mutationTwo] = temp;
+        addToNextPop(mutationParent, nextPopulation);
+    }
+
+    /**
+     * Takes an available, unused ordering, and puts it straight into the next population
+     * @author Louise Madden
+     * @param currentPopulation
+     * @param nextPopulation
+     * @param available
+     */
+    public static void reproduction(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
+        boolean availableParent = false;
+        int random = 0;
+        while (!availableParent) {
+            random = (int)(Math.random() * currentPopulation.length);
+            if(available[random]) {
+                addToNextPop(currentPopulation[random], nextPopulation);
+                available[random] = false;
+            }
+        }
+    }
+
+    /**
+     * Checks if the boolean array is empty
+     * @author Louise Madden
+     * @param available
+     * @return
+     */
+    public static boolean isEmpty(boolean[] available) {
+        for (int i  = 0; i < available.length; i++) {
+            if (available[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * checks if the ordering is empty, so you don't overwrite another ordering
+     * Used to check if an ordering has been input into an index of next population
+     * @author Louise Madden
+     * @param ordering
+     * @return
+     */
+    public static boolean emptyOrdering(int[] ordering) {
+        boolean empty = true;
+        for(int i = 0; i < ordering.length && empty; i++) {
+            if(ordering[i] != 0) {
+                empty = false;
+            }
+        }
+        return empty;
+    }
+    /**
+     * Remove duplicates by counting the occurrence of each number in the child
+     * Swapping the numbers that occur multiple times with ones that don't occur at all but should
+     * @author Louise Madden
+     * @param parent
+     * @param child
+     * @return
+     */
+    public static int[] removeDuplicates(int[] parent, int[] child) {
+        int[] occurrences = new int[parent.length];
+        for (int i = 0; i < parent.length; i++) {
+            for (int j = 0; j < child.length; j++) {
+                if (child[j] == parent[i]) {
+                    occurrences[i]++;
+                }
+            }
+        }
+        
+        int none = 0, multiple = 0;
+        boolean even = false;
+        while(!even) {
+            int count = 0;
+            for(int i = 0; i < occurrences.length; i++) {
+                if (occurrences[i] == 1){
+                    count++;
+                }
+            }
+            if(count == occurrences.length) {
+                even = true;
+                break;
+            } 
+            for (int i = 0; i < occurrences.length; i++) {
+                if (occurrences[i] == 0) {
+                    none = i;
+                }
+
+                else if (occurrences[i] == 2) {
+                    multiple = i;
+                }
+            }
+            for(int i = 0; i < child.length; i++) {
+                if(child[i] == parent[multiple]) {
+                    child[i] = parent[none];
+                    occurrences[multiple]--;
+                    occurrences[none]++;
+                }
+            }
+        }
+
+        return child;
+    }
+
+    /**
+     * Add child to next population
+     * @author Louise Madden
+     * @param child
+     * @param nextPopulation
+     * @return
+     */
+    public static int[][] addToNextPop(int[]child, int[][] nextPopulation) {
+        
+        for(int i = 0; i < nextPopulation.length; i++) {
+            if(emptyOrdering(nextPopulation[i])) {
+                nextPopulation[i] = child;
+                break;
+            }   
+        }
+        return nextPopulation;
+    }
     /*------------------------------------Szymon is doing the fitness function----------------------------------------------*/
     
     /**
