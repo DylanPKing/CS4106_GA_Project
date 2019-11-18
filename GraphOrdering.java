@@ -3,6 +3,7 @@ import java.io.*;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+
 import java.awt.Graphics;
 
 public class GraphOrdering extends JFrame{
@@ -33,8 +34,8 @@ public class GraphOrdering extends JFrame{
         int radius = 100;
         int mov = 200;
         
-        for (int i = 0; i < populationSize; i++) {
-            for (int j = i + 1; j < populationSize; j++) {
+        for (int i = 0; i < adjMatrix.length; i++) {
+            for (int j = i + 1; j < adjMatrix.length; j++) {
                 if (adjMatrix[currentOrdering[i]][currentOrdering[j]] == 1) {
                     g.drawLine(
                         (int)(((double) Math.cos(i * chunk)) * radius + mov),
@@ -95,13 +96,13 @@ public class GraphOrdering extends JFrame{
         }
         /*-------------------------------End Szymon is is doing validation and input-------------------------------*/
         //The main continues here
-        chunk = (2 * Math.PI) / populationSize;
         adjMatrix = convertEdgeTable();
-        int[][] currentPopulation = new int[adjMatrix.length][populationSize];
-        int[][] nextPopulation = new int[adjMatrix.length][populationSize];
-        double[] fitness = new double[adjMatrix.length];
+        chunk = (2 * Math.PI) / adjMatrix.length;
+        int[][] currentPopulation = new int[populationSize][adjMatrix.length];
+        int[][] nextPopulation = new int[populationSize][adjMatrix.length];
+        double[] fitness = new double[populationSize];
         initialisation(currentPopulation, adjMatrix.length);
-        for (int i = 0; i < currentPopulation.length; i++) {
+        for (int i = 0; i < populationSize; i++) {
             currentOrdering = currentPopulation[i];
             fitness[i] = fitnessFunction();
         }
@@ -118,8 +119,9 @@ public class GraphOrdering extends JFrame{
                 currentOrdering = currentPopulation[j];
                 fitness[j] = fitnessFunction();
             }
-
+            selectionProcessSort(currentPopulation, fitness, 0, fitness.length - 1);
             currentOrdering = currentPopulation[0];
+            System.out.println(currentOrdering.toString());
             GraphOrdering visualisation = new GraphOrdering();
         }
     }
@@ -257,32 +259,16 @@ public class GraphOrdering extends JFrame{
 
     public static void initialisation(int[][] current, int maxRow)
     {
-        int random = 0;
-        boolean found = false;
-        int populationCount = 0;
-
         //Let's make unique random values
         ArrayList<Integer> uniqueRandomNumbers = new ArrayList<Integer>();
-        for(int row = 0; row < (maxRow+1); row++){
-            for(int i = 0; i< (maxRow+1);){
-                found = false;
-                random = (int)(Math.random() * 18);
-                for(int j = 0; j< uniqueRandomNumbers.size(); j++){
-                    if(uniqueRandomNumbers.get(j) == random)
-                        found = true;
-                }
-                if(!found){
-                    uniqueRandomNumbers.add(random);
-                    i++;
-                }
-            }
-            for(int j = 0; j < uniqueRandomNumbers.size();j++){
-                current[populationCount][j] =uniqueRandomNumbers.get(j);
-            }
+        for(int i = 0; i < current.length; i++){
+            for (int j = 0; j < 18; j++)
+                uniqueRandomNumbers.add(j);
+            Collections.shuffle(uniqueRandomNumbers);
+            for (int j = 0; j < uniqueRandomNumbers.size(); j++)
+                current[i][j] = uniqueRandomNumbers.get(j);
             uniqueRandomNumbers.clear();
-            populationCount++;
         }
-
         System.out.println("Here begins the population initialisation");
         for (int i = 0; i < current.length; i++) {
             for (int j = 0; j < current[i].length; j++) {
@@ -301,7 +287,7 @@ public class GraphOrdering extends JFrame{
      * @param fitness corresponding fitness values for each member of the population
      */
     public static void selectionProcess(int[][] currentPop, double[] fitness) {
-        selectionProcessSort(currentPop, fitness, 0, fitness.length);
+        selectionProcessSort(currentPop, fitness, 0, fitness.length - 1);
         increaseFitness(currentPop, fitness);
     }
 
@@ -373,39 +359,68 @@ public class GraphOrdering extends JFrame{
     private static void selectionProcessMerge(int[][] currentPop, double[] fitness,
                                        final int left, final int middle, final int right) {
 
-        // Creating copies of each half of both arrays
-        double[] leftFitArr = Arrays.copyOfRange(fitness, 0, middle);
-        double[] rightFitArr = Arrays.copyOfRange(fitness, middle + 1, right);
-        int[][] leftPopArr = Arrays.copyOfRange(currentPop, 0, middle);
-        int[][] rightPopArr = Arrays.copyOfRange(currentPop, middle + 1, right);
+        if (left + 1 != right) {
+            // Creating copies of each half of both arrays
+            /* double[] leftFitArr = Arrays.copyOfRange(fitness, 0, middle);
+            double[] rightFitArr = Arrays.copyOfRange(fitness, middle, right);
+            int[][] leftPopArr = Arrays.copyOfRange(currentPop, 0, middle);
+            int[][] rightPopArr = Arrays.copyOfRange(currentPop, middle, right); */
 
-        // Declaring counters for the rest of the method
-        int i = 0, j = 0, k = left;
 
-        // Goes through the fitness arrays and places the ordering with the lowest fitness score first
-        // Only increments the index that was chosen so neither half is skipped over
-        for (; i < leftFitArr.length && j < rightFitArr.length; k++) {
-            if (leftFitArr[i] <= rightFitArr[j]) {
+            int limitOne = middle - left + 1;
+            int limitTwo = right - middle;
+
+            double[] leftFitArr = new double[limitOne];
+            double[] rightFitArr = new double[limitTwo];
+            int[][] leftPopArr = new int[limitOne][18];
+            int[][] rightPopArr = new int[limitTwo][18];
+
+            for (int i = 0; i < limitOne; i++) {
+                leftFitArr[i] = fitness[left + i];
+                leftPopArr[i] = currentPop[left + i];
+            }
+            for (int i = 0; i < rightPopArr.length; i++) {
+                rightFitArr[i] = fitness[middle + 1 + i];
+                rightPopArr[i] = currentPop[middle + 1 + i];
+            }
+
+            // Declaring counters for the rest of the method
+            int i = 0, j = 0, k = left;
+
+            // Goes through the fitness arrays and places the ordering with the lowest fitness score first
+            // Only increments the index that was chosen so neither half is skipped over
+            for (; i < leftFitArr.length && j < rightFitArr.length; k++) {
+                if (leftFitArr[i] <= rightFitArr[j]) {
+                    currentPop[k] = leftPopArr[i];
+                    fitness[k] = leftFitArr[i];
+                    i++;
+                } else {
+                    currentPop[k] = rightPopArr[j];
+                    fitness[k] = rightFitArr[j];
+                    j++;
+                }
+            }
+
+            // If the right half is fully placed first, assign remaining left half orderings
+            for (; i < leftFitArr.length; i++, k++) {
                 currentPop[k] = leftPopArr[i];
                 fitness[k] = leftFitArr[i];
-                i++;
-            } else {
+            }
+
+            // and vice-versa
+            for (; j < rightFitArr.length; j++, k++) {
                 currentPop[k] = rightPopArr[j];
                 fitness[k] = rightFitArr[j];
-                j++;
             }
-        }
-
-        // If the right half is fully placed first, assign remaining left half orderings
-        for (; i < leftFitArr.length; i++, k++) {
-            currentPop[k] = leftPopArr[i];
-            fitness[k] = leftFitArr[i];
-        }
-
-        // and vice-versa
-        for (; j < rightFitArr.length; j++, k++) {
-            currentPop[k] = rightPopArr[j];
-            fitness[k] = rightFitArr[j];
+        } else {
+            if (fitness[left] > fitness[right]) {
+                double temp = fitness[right];
+                fitness[right] = fitness[left];
+                fitness[left] = temp;
+                int[] tempPop = currentPop[right];
+                currentPop[left] = currentPop[right];
+                currentPop[right] = tempPop;
+            }
         }
     }
     /** 
@@ -419,8 +434,8 @@ public class GraphOrdering extends JFrame{
             available[i] = true;
         }
         while (!isEmpty(available)) {
-            int pr = (int) Math.random() * 101;
-            if (crossoverRate >= pr) {
+            int pr = (int)(Math.random() * 101);
+            if (crossoverRate >= pr  && numTrue(available) != 1) {
                 crossover(currentPopulation,nextPopulation, available);
             }
 
@@ -442,10 +457,10 @@ public class GraphOrdering extends JFrame{
      */
     public static void crossover(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
         boolean parent1 = false, parent2 = false;
-        int[] parentOne = new int[currentPopulation.length];
-        int[] parentTwo = new int[currentPopulation.length];
+        int[] parentOne = new int[currentPopulation[0].length];
+        int[] parentTwo = new int[currentPopulation[0].length];
         //Assigning the parent orderings from ones that havn't been used yet
-        while(parent1 && parent2) {
+        while(!parent1 || !parent2) {
             int parent = (int)(Math.random()*currentPopulation.length);
             if(available[parent] && !parent1) {
                 parentOne = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
@@ -462,21 +477,20 @@ public class GraphOrdering extends JFrame{
             }
         }
         //manipulating children
-        int[] childOne = new int[nextPopulation[0].length];
+        int[] childOne = new int[currentPopulation[0].length];
         childOne = Arrays.copyOf(parentOne, parentOne.length);
-        int[] childTwo = new int[nextPopulation[0].length];
+        int[] childTwo = new int[currentPopulation[0].length];
         childTwo = Arrays.copyOf(parentTwo, parentTwo.length);
 
-        int cuttingPoint = (int)((Math.random() * (currentPopulation.length - 1)) + 1);
+        int cuttingPoint = (int)((Math.random() * ((adjMatrix.length / 2) - 2) + 1) * 2);
         for (int i = 0; i < cuttingPoint; i++) {
             childOne[i] = parentTwo[i];
             childTwo[i] = parentOne[i];
         }
         //removing duplicates in children and adding them to the next generation
-        childOne = removeDuplicates(parentOne, childOne);
-        childTwo = removeDuplicates(parentTwo, childTwo);
-        nextPopulation = addToNextPop(childOne, nextPopulation);
-        nextPopulation = addToNextPop(childTwo, nextPopulation);
+        removeDuplicates(childOne, childTwo, parentOne, parentTwo, cuttingPoint);
+        addToNextPop(childOne, nextPopulation);
+        addToNextPop(childTwo, nextPopulation);
     }
 
     /**
@@ -497,6 +511,7 @@ public class GraphOrdering extends JFrame{
             if(available[parent]) {
                 mutationParent = Arrays.copyOf(currentPopulation[parent], mutationParent.length);
                 available[parent] = false;
+                availableParent = true;
             }
         }
         //get two unique random numbers to mutate
@@ -527,6 +542,7 @@ public class GraphOrdering extends JFrame{
             if(available[random]) {
                 addToNextPop(currentPopulation[random], nextPopulation);
                 available[random] = false;
+                availableParent = true;
             }
         }
     }
@@ -544,6 +560,16 @@ public class GraphOrdering extends JFrame{
             }
         }
         return true;
+    }
+
+    public static int numTrue(boolean[] available) {
+        int count = 0;
+        for (int i  = 0; i < available.length; i++) {
+            if (available[i]) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -570,48 +596,66 @@ public class GraphOrdering extends JFrame{
      * @param child
      * @return
      */
-    public static int[] removeDuplicates(int[] parent, int[] child) {
-        int[] occurrences = new int[parent.length];
-        for (int i = 0; i < parent.length; i++) {
-            for (int j = 0; j < child.length; j++) {
-                if (child[j] == parent[i]) {
-                    occurrences[i]++;
-                }
-            }
-        }
-        
-        int none = 0, multiple = 0;
-        boolean even = false;
-        while(!even) {
-            int count = 0;
-            for(int i = 0; i < occurrences.length; i++) {
-                if (occurrences[i] == 1){
-                    count++;
-                }
-            }
-            if(count == occurrences.length) {
-                even = true;
-                break;
-            } 
-            for (int i = 0; i < occurrences.length; i++) {
-                if (occurrences[i] == 0) {
-                    none = i;
-                }
+    public static void removeDuplicates(int[] childOne, int[] childTwo,
+            int[] parentOne, int[] parentTwo, final int cuttingPoint) {
+        /* boolean[] occurrencesOne = new boolean[childOne.length];
+        boolean[] occurrencesTwo = new boolean[childTwo.length];
+        ArrayList<Integer> indexesOne = new ArrayList<>();
+        ArrayList<Integer> indexesTwo = new ArrayList<>();
 
-                else if (occurrences[i] == 2) {
-                    multiple = i;
+        for (int i = 0; i < cuttingPoint; i++) {
+            for (int j = 0; j < occurrencesOne.length; j++) {
+                if (childOne[i] == childOne[j] && i != j) {
+                    occurrencesOne[i] = true;
+                    indexesOne.add(i);
                 }
-            }
-            for(int i = 0; i < child.length; i++) {
-                if(child[i] == parent[multiple]) {
-                    child[i] = parent[none];
-                    occurrences[multiple]--;
-                    occurrences[none]++;
+                if (childTwo[i] == childTwo[j] && i != j) {
+                    occurrencesTwo[i] = true;
+                    indexesTwo.add(i);
                 }
+                if (occurrencesOne[i] || occurrencesTwo[i])
+                    break;
             }
         }
 
-        return child;
+        if (!indexesOne.isEmpty()) {
+            for (int i = 0; i < indexesOne.size(); i++) {
+                int temp = childTwo[indexesTwo.get(i)];
+                childTwo[indexesTwo.get(i)] = childOne[indexesOne.get(i)];
+                childTwo[indexesTwo.get(i)] = temp;
+            }
+        } */
+        List<Integer> childOneList = toIntList(childOne);
+        List<Integer> childTwoList = toIntList(childTwo);
+        List<Integer> dupesOne = new ArrayList<>();
+        List<Integer> iOne = new ArrayList<>();
+        List<Integer> dupesTwo = new ArrayList<>();
+        List<Integer> iTwo = new ArrayList<>();
+        for (int i = cuttingPoint; i < childOneList.size(); i++) {
+            int elOne = childOneList.get(i);
+            int elTwo = childTwoList.get(i);
+            if (childOneList.indexOf(elOne) != childOneList.lastIndexOf(elOne)) {
+                dupesOne.add(elOne);
+                iOne.add(i);
+            }
+            if (childTwoList.indexOf(elTwo) != childTwoList.lastIndexOf(elTwo)) {
+                dupesTwo.add(elTwo);
+                iTwo.add(i);
+            }
+        }
+        System.out.println();
+        for (int i = 0; i < dupesOne.size(); i++) {
+            childOneList.set(iTwo.get(i), dupesTwo.get(i));
+            childTwoList.set(iOne.get(i), dupesOne.get(i));
+        }
+
+    }
+
+    private static ArrayList<Integer> toIntList(int[] arr) {
+        ArrayList<Integer> intList = new ArrayList<>(arr.length);
+        for (int i : arr)
+            intList.add(i);
+        return intList;
     }
 
     /**
@@ -621,7 +665,7 @@ public class GraphOrdering extends JFrame{
      * @param nextPopulation
      * @return
      */
-    public static int[][] addToNextPop(int[]child, int[][] nextPopulation) {
+    public static void addToNextPop(int[]child, int[][] nextPopulation) {
         
         for(int i = 0; i < nextPopulation.length; i++) {
             if(emptyOrdering(nextPopulation[i])) {
@@ -629,7 +673,6 @@ public class GraphOrdering extends JFrame{
                 break;
             }   
         }
-        return nextPopulation;
     }
     /*------------------------------------Szymon is doing the fitness function----------------------------------------------*/
     
@@ -649,15 +692,20 @@ public class GraphOrdering extends JFrame{
     
 
         for(int i = 0; i < adjMatrix.length; i++)
-            for(int j = i; j < adjMatrix[i].length; j++){
+            for(int j = i + 1; j < adjMatrix[i].length; j++){
                 if(adjMatrix[currentOrdering[i]][currentOrdering[j]] == 1){
                     x1 = (((double) Math.cos(i * chunk)) * radius + mov);
                     y1 = (((double) Math.sin(i * chunk)) * radius + mov);
                     x2 = (((double) Math.cos(j * chunk)) * radius + mov);
-                    y2 = (((double) Math.cos(j * chunk)) * radius + mov);
+                    y2 = (((double) Math.sin(j * chunk)) * radius + mov);
                 }
                 
                 distance += Math.sqrt(Math.pow((x2 - x1), 2) + (Math.pow(y2 - y1, 2)));
+            
+                x1 = 0.0;
+                x2 = 0.0;
+                y1 = 0.0;
+                y2 = 0.0;
             }
         return distance;
     }
