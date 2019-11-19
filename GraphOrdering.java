@@ -429,22 +429,22 @@ public class GraphOrdering extends JFrame{
      */
     public static void crossoverFunction(int crossoverRate, int mutationRate, int[][] currentPopulation, int[][] nextPopulation) {
        //boolean array listing if an ordering has been used yet
-        boolean[] available = new boolean[currentPopulation.length];
-        for (int i = 0; i < available.length; i++) {
-            available[i] = true;
+        ArrayList<Integer> free = new ArrayList<>();
+        for (int i = 0; i < currentPopulation.length; i++) {
+            free.add(i);
         }
-        while (!isEmpty(available)) {
+        while (!free.isEmpty()) {
             int pr = (int)(Math.random() * 101);
-            if (crossoverRate >= pr  && numTrue(available) != 1) {
-                crossover(currentPopulation,nextPopulation, available);
+            if (crossoverRate >= pr  && free.size() != 1) {
+                crossover(currentPopulation,nextPopulation, free);
             }
 
             if (crossoverRate <= pr && pr <= (crossoverRate + mutationRate)) {
-                mutation(currentPopulation,nextPopulation, available);
+                mutation(currentPopulation,nextPopulation, free);
             }
 
             if ((crossoverRate + mutationRate) <= pr) {
-                reproduction(currentPopulation,nextPopulation, available);
+                reproduction(currentPopulation,nextPopulation, free);
             }
         }
     }
@@ -455,27 +455,20 @@ public class GraphOrdering extends JFrame{
      * @param nextPopulation
      * @param available
      */
-    public static void crossover(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
+    public static void crossover(int[][] currentPopulation, int[][] nextPopulation, ArrayList<Integer> free) {
         boolean parent1 = false, parent2 = false;
         int[] parentOne = new int[currentPopulation[0].length];
         int[] parentTwo = new int[currentPopulation[0].length];
-        //Assigning the parent orderings from ones that havn't been used yet
-        while(!parent1 || !parent2) {
-            int parent = (int)(Math.random()*currentPopulation.length);
-            if(available[parent] && !parent1) {
-                parentOne = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
-                parent1 = true;
-                available[parent] = false;
-                //Assigned parent one and made that ordering unavailableto be chosen again
-            }
-            parent = (int)(Math.random()*currentPopulation.length);
-            //finding parent ordering two
-            if(available[parent]) {
-                parentTwo = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
-                parent2 = true;
-                available[parent] = false;
-            }
-        }
+
+        int index = (int)(Math.random()*free.size());
+        int parent = free.get(index);
+        parentOne = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
+        free.remove(index);
+        index = (int)(Math.random()*free.size());
+        parent = free.get(index);
+        parentTwo = Arrays.copyOf(currentPopulation[parent], currentPopulation[parent].length);
+        free.remove(index);
+
         //manipulating children
         int[] childOne = new int[currentPopulation[0].length];
         childOne = Arrays.copyOf(parentOne, parentOne.length);
@@ -500,20 +493,15 @@ public class GraphOrdering extends JFrame{
      * @param nextPopulation
      * @param available
      */
-    public static void mutation(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
+    public static void mutation(int[][] currentPopulation, int[][] nextPopulation, ArrayList<Integer> free) {
         
         //find ordering to mutate
-        boolean availableParent = false;
-        int[] mutationParent = new int[currentPopulation.length];
+        int[] mutationParent = new int[currentPopulation[0].length];
         int parent = 0;
-        while(!availableParent) {
-            parent = (int)(Math.random() * mutationParent.length);
-            if(available[parent]) {
-                mutationParent = Arrays.copyOf(currentPopulation[parent], mutationParent.length);
-                available[parent] = false;
-                availableParent = true;
-            }
-        }
+        int index = (int)(Math.random() * free.size());
+        parent = free.get(index);
+        mutationParent = Arrays.copyOf(currentPopulation[parent], mutationParent.length);
+        free.remove(index);
         //get two unique random numbers to mutate
         int mutationOne = 0, mutationTwo = 0;
         while (mutationOne == mutationTwo) {
@@ -534,42 +522,14 @@ public class GraphOrdering extends JFrame{
      * @param nextPopulation
      * @param available
      */
-    public static void reproduction(int[][] currentPopulation, int[][] nextPopulation, boolean[] available) {
-        boolean availableParent = false;
+    public static void reproduction(int[][] currentPopulation, int[][] nextPopulation, ArrayList<Integer> free) {
+        int[]reproductionParent;
         int random = 0;
-        while (!availableParent) {
-            random = (int)(Math.random() * currentPopulation.length);
-            if(available[random]) {
-                addToNextPop(currentPopulation[random], nextPopulation);
-                available[random] = false;
-                availableParent = true;
-            }
-        }
-    }
-
-    /**
-     * Checks if the boolean array is empty
-     * @author Louise Madden
-     * @param available
-     * @return
-     */
-    public static boolean isEmpty(boolean[] available) {
-        for (int i  = 0; i < available.length; i++) {
-            if (available[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static int numTrue(boolean[] available) {
-        int count = 0;
-        for (int i  = 0; i < available.length; i++) {
-            if (available[i]) {
-                count++;
-            }
-        }
-        return count;
+        int index = (int)(Math.random() * free.size());
+        random = free.get(index);
+        reproductionParent = Arrays.copyOf(currentPopulation[random], currentPopulation[random].length);
+        addToNextPop(reproductionParent, nextPopulation);
+        free.remove(index);
     }
 
     /**
@@ -598,33 +558,6 @@ public class GraphOrdering extends JFrame{
      */
     public static void removeDuplicates(int[] childOne, int[] childTwo,
             int[] parentOne, int[] parentTwo, final int cuttingPoint) {
-        /* boolean[] occurrencesOne = new boolean[childOne.length];
-        boolean[] occurrencesTwo = new boolean[childTwo.length];
-        ArrayList<Integer> indexesOne = new ArrayList<>();
-        ArrayList<Integer> indexesTwo = new ArrayList<>();
-
-        for (int i = 0; i < cuttingPoint; i++) {
-            for (int j = 0; j < occurrencesOne.length; j++) {
-                if (childOne[i] == childOne[j] && i != j) {
-                    occurrencesOne[i] = true;
-                    indexesOne.add(i);
-                }
-                if (childTwo[i] == childTwo[j] && i != j) {
-                    occurrencesTwo[i] = true;
-                    indexesTwo.add(i);
-                }
-                if (occurrencesOne[i] || occurrencesTwo[i])
-                    break;
-            }
-        }
-
-        if (!indexesOne.isEmpty()) {
-            for (int i = 0; i < indexesOne.size(); i++) {
-                int temp = childTwo[indexesTwo.get(i)];
-                childTwo[indexesTwo.get(i)] = childOne[indexesOne.get(i)];
-                childTwo[indexesTwo.get(i)] = temp;
-            }
-        } */
         List<Integer> childOneList = toIntList(childOne);
         List<Integer> childTwoList = toIntList(childTwo);
         List<Integer> dupesOne = new ArrayList<>();
@@ -645,12 +578,12 @@ public class GraphOrdering extends JFrame{
         }
         System.out.println();
         for (int i = 0; i < dupesOne.size(); i++) {
-            childOneList.set(iTwo.get(i), dupesTwo.get(i));
-            childTwoList.set(iOne.get(i), dupesOne.get(i));
+            childOne[iTwo.get(i)] = dupesTwo.get(i);
+            childTwo[iOne.get(i)] = dupesOne.get(i);
         }
 
     }
-
+    
     private static ArrayList<Integer> toIntList(int[] arr) {
         ArrayList<Integer> intList = new ArrayList<>(arr.length);
         for (int i : arr)
@@ -669,7 +602,7 @@ public class GraphOrdering extends JFrame{
         
         for(int i = 0; i < nextPopulation.length; i++) {
             if(emptyOrdering(nextPopulation[i])) {
-                nextPopulation[i] = child;
+                nextPopulation[i] = Arrays.copyOf(child, child.length);
                 break;
             }   
         }
