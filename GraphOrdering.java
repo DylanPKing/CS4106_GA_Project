@@ -41,7 +41,7 @@ public class GraphOrdering extends JFrame{
                         (int)(((double) Math.cos(i * chunk)) * radius + mov),
                         (int)(((double) Math.sin(i * chunk)) * radius + mov),
                         (int)(((double) Math.cos(j * chunk)) * radius + mov),
-                        (int)(((double) Math.cos(j * chunk)) * radius + mov)
+                        (int)(((double) Math.sin(j * chunk)) * radius + mov)
                     );
                 }
             }
@@ -437,13 +437,9 @@ public class GraphOrdering extends JFrame{
             int pr = (int)(Math.random() * 101);
             if (crossoverRate >= pr  && free.size() != 1) {
                 crossover(currentPopulation,nextPopulation, free);
-            }
-
-            if (crossoverRate <= pr && pr <= (crossoverRate + mutationRate)) {
+            } else if (crossoverRate <= pr && pr <= (crossoverRate + mutationRate)) {
                 mutation(currentPopulation,nextPopulation, free);
-            }
-
-            if ((crossoverRate + mutationRate) <= pr) {
+            } else if ((crossoverRate + mutationRate) <= pr) {
                 reproduction(currentPopulation,nextPopulation, free);
             }
         }
@@ -475,7 +471,7 @@ public class GraphOrdering extends JFrame{
         int[] childTwo = new int[currentPopulation[0].length];
         childTwo = Arrays.copyOf(parentTwo, parentTwo.length);
 
-        int cuttingPoint = (int)((Math.random() * ((adjMatrix.length / 2) - 2) + 1) * 2);
+        int cuttingPoint = (int)((Math.random() * ((adjMatrix.length / 2) - 2) + 1) * 2) + 1;
         for (int i = 0; i < cuttingPoint; i++) {
             childOne[i] = parentTwo[i];
             childTwo[i] = parentOne[i];
@@ -577,9 +573,9 @@ public class GraphOrdering extends JFrame{
             }
         }
         System.out.println();
-        for (int i = 0; i < dupesOne.size(); i++) {
-            childOne[iTwo.get(i)] = dupesTwo.get(i);
-            childTwo[iOne.get(i)] = dupesOne.get(i);
+        for (int i = 0, j = dupesTwo.size() - 1; i < dupesOne.size(); i++, j--) {
+            childOne[iOne.get(j)] = dupesTwo.get(i);
+            childTwo[iTwo.get(i)] = dupesOne.get(i);
         }
 
     }
@@ -634,11 +630,6 @@ public class GraphOrdering extends JFrame{
                 }
                 
                 distance += Math.sqrt(Math.pow((x2 - x1), 2) + (Math.pow(y2 - y1, 2)));
-            
-                x1 = 0.0;
-                x2 = 0.0;
-                y1 = 0.0;
-                y2 = 0.0;
             }
         return distance;
     }
