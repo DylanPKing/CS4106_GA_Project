@@ -107,10 +107,13 @@ public class GraphOrdering extends JFrame{
             fitness[i] = fitnessFunction();
         }
         
+        selectionProcessSort(currentPopulation, fitness, 0, fitness.length - 1);
+        currentOrdering = currentPopulation[0];
+        GraphOrdering visualisation = new GraphOrdering();
+
         for (int i = 0; i < numberOfGenerations; i++) {
             selectionProcess(currentPopulation, fitness);
             crossoverFunction(crossoverRate, mutationRate, currentPopulation, nextPopulation);
-            
             for (int j = 0; j < nextPopulation.length; j++) {
                 currentPopulation[j] = Arrays.copyOf(nextPopulation[j], nextPopulation[j].length);
             }
@@ -121,17 +124,31 @@ public class GraphOrdering extends JFrame{
             }
             selectionProcessSort(currentPopulation, fitness, 0, fitness.length - 1);
             currentOrdering = currentPopulation[0];
-            System.out.println(currentOrdering.toString());
-            GraphOrdering visualisation = new GraphOrdering();
+
+            emptyNextPopulation(nextPopulation);
+            
+            GraphOrdering visualisation1 = new GraphOrdering();
         }
+
+
+        
     }
 	
 	/*-------------------------------Szymon is is doing validation and input-------------------------------*/
 	
-	/**
-	 * Just a quick welcome message
-	 * @author Szymon Sztyrmer
-	 */
+	private static void emptyNextPopulation(int[][] nextPopulation) {
+        for (int i = 0; i < nextPopulation.length; i++) {
+            for (int j = 0; j < nextPopulation[i].length; j++) {
+                nextPopulation[i][j] = 0;
+            }
+        }
+    }
+
+    /**
+     * Just a quick welcome message
+     * 
+     * @author Szymon Sztyrmer
+     */
 	public static void welcome()
 	{
 		JOptionPane.showMessageDialog(null, "Welcome, press OK to start, use the cancel button to return to the previous screen during input.");
@@ -572,10 +589,9 @@ public class GraphOrdering extends JFrame{
                 iTwo.add(i);
             }
         }
-        System.out.println();
         for (int i = 0, j = dupesTwo.size() - 1; i < dupesOne.size(); i++, j--) {
-            childOne[iOne.get(j)] = dupesTwo.get(i);
-            childTwo[iTwo.get(i)] = dupesOne.get(i);
+            childOne[iOne.get(i)] = dupesTwo.get(i);
+            childTwo[iTwo.get(i)] = dupesOne.get(j);
         }
 
     }
@@ -630,6 +646,11 @@ public class GraphOrdering extends JFrame{
                 }
                 
                 distance += Math.sqrt(Math.pow((x2 - x1), 2) + (Math.pow(y2 - y1, 2)));
+
+                x1 = 0;
+                x2 = 0;
+                y1 = 0;
+                y2 = 0;
             }
         return distance;
     }
